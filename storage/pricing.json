@@ -1,0 +1,6 @@
+{
+    "A": {"unit_price": 50, "special_qty": 3, "special_price": 130},
+    "B": {"unit_price": 30, "special_qty": 2, "special_price": 45},
+    "C": {"unit_price": 20},
+    "D": {"unit_price": 15}
+}
