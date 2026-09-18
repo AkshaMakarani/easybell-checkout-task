@@ -19,7 +19,7 @@ class CheckoutController extends Controller
     //Displays the checkout page with the current state of scanned items and total price.
     public function index(Request $request): View
     {
-        $scanned = $request->session()->get(self::SESSION_KEY, []);
+        $scanned = $this->scannedFromSession($request);//$request->session()->get(self::SESSION_KEY, []);
         $skus = $this->priceList->skus();
         return view('checkout.index', [
             ...$this->stateFor($scanned),
@@ -41,7 +41,7 @@ class CheckoutController extends Controller
             return $this->error($request, "Unknown item [{$validated['sku']}].");
         }
 
-        $scanned = $request->session()->get(self::SESSION_KEY, []);
+        $scanned = $this->scannedFromSession($request);//$request->session()->get(self::SESSION_KEY, []);
         $scanned[] = $validated['sku'];
         $request->session()->put(self::SESSION_KEY, $scanned);
 
@@ -54,7 +54,7 @@ class CheckoutController extends Controller
             'sku' => ['required', 'string'],
         ]);
 
-        $scanned = $request->session()->get(self::SESSION_KEY, []);
+        $scanned = $this->scannedFromSession($request);//$request->session()->get(self::SESSION_KEY, []);
 
         $checkout = new CheckoutService($this->priceList);
         foreach ($scanned as $sku) {
@@ -114,6 +114,16 @@ class CheckoutController extends Controller
             'items' => $items,
             'total' => array_sum(array_column($items, 'subtotal')),
         ];
+    }
+    //Retrieves the scanned items from the session, filtering out any SKUs that don't have a pricing rule defined.
+    private function scannedFromSession(Request $request): array
+    {
+        $scanned = $request->session()->get(self::SESSION_KEY, []);
+
+        return array_values(array_filter(
+            $scanned,
+            fn ($sku) => $this->priceList->has($sku)
+        ));
     }
 }
 ?>
